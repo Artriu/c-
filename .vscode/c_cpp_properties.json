@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "E:/OpenGL/glfw-3.4.bin.WIN64/include",
+                "E:/OpenGL/glad/include",
+                "E:\\OpenGL\\glad\\src",
+                "E:\\C++ Projects\\OpenGLStuff\\External"
+            ]
+        }
+    ],
+    "version": 4
+}
