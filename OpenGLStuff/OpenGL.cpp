@@ -6,37 +6,7 @@
 #include <cmath>
 #include <iostream>
 #include <cstdint>
-
-uint8_t Cubeing[4][4][4] =
-{
-    {
-        {1, 1, 1, 1},
-        {1, 0, 0, 1},
-        {1, 0, 1, 1},
-        {1, 1, 1, 1}
-    },
-
-    {
-        {1, 1, 1, 1},
-        {1, 0, 0, 1},
-        {1, 0, 0, 1},
-        {1, 1, 1, 1}
-    },
-
-    {
-        {1, 1, 1, 1},
-        {1, 1, 0, 1},
-        {1, 0, 0, 1},
-        {1, 1, 1, 1}
-    },
-
-    {
-        {1, 1, 1, 1},
-        {1, 1, 0, 1},
-        {1, 1, 0, 1},
-        {1, 1, 1, 1}
-    }
-};
+#include <vector>
 
 const char* VertexShaderSource = R"(
     #version 330 core
@@ -178,10 +148,47 @@ float Vertices[] =
      0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f
 };
 
-//keyboard movement
+//chunk mesher
 
-const int ChunkSize = 4;
+struct ChunkMesh {
+    unsigned int VAO = 0;
+    unsigned int VBO = 0;
+    int vertexCount = 0;
+};
+
+//randomGlobals
+
+int w;
+int h;
+
+//chunk
+
+const int ChunkSize = 32;
 const float blockSize = 1;
+
+struct Chunk
+{
+    uint8_t blocks[ChunkSize][ChunkSize][ChunkSize];
+
+    int chunkX;
+    int chunkY;
+    int chunkZ;
+
+    ChunkMesh mesh;
+};
+
+std::vector<Chunk> world;
+
+//sides for drawing
+
+constexpr int FRONT_FACE  = 0;
+constexpr int BACK_FACE   = 6;
+constexpr int LEFT_FACE   = 12;
+constexpr int RIGHT_FACE  = 18;
+constexpr int TOP_FACE    = 24;
+constexpr int BOTTOM_FACE = 30;
+
+//keyboard movement
 
 glm::vec3 cameraPos( 0.0f, 3.0f, 3.0f);
 float cameraSpeed = 5.0f;
@@ -230,7 +237,7 @@ void ProcessInput(GLFWwindow* window, float deltaTime)
         cameraPos.y -= speed;
 }
 
-//pitch clamp, i currently do not understand
+//pitch clamp
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -267,6 +274,16 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
     cameraFront = glm::normalize(direction);
 }
+
+//function initialization
+
+void AppendFace(std::vector<float>& mesh, int faceStart, int x, int y, int z);
+void GenerateChunk(Chunk& chunk);
+void framebuffer_size_callback(GLFWwindow*, int w, int h);
+bool IsBlockSolid(Chunk& chunk, int x, int y, int z);
+void ChunkMesher(Chunk& chunk);
+
+//main
 
 int main()
 {
@@ -321,43 +338,26 @@ int main()
           << shaderProgram
           << '\n';
 
-    //VAO and VBO setup
+    //ChunkPositions & generation
 
-    unsigned int VAO, VBO;
+    Chunk chunk0 = {};
+    chunk0.chunkX = 0;
+    chunk0.chunkY = 0;
+    chunk0.chunkZ = 0;
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    Chunk chunk1 = {};
+    chunk1.chunkX = 1;
+    chunk1.chunkY = 0;
+    chunk1.chunkZ = 0;
 
-    glBindVertexArray(VAO);
+    GenerateChunk(chunk0);
+    GenerateChunk(chunk1);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
+    ChunkMesher(chunk0);
+    ChunkMesher(chunk1);
 
-    //send to the GPU
-
-    glVertexAttribPointer(
-        0,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        6 * sizeof(float),
-        (void*)0
-    );
-
-    glVertexAttribPointer(
-        1,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        6 * sizeof(float),
-        (void*)(3 * sizeof(float))
-    );
-
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    world.push_back(chunk0);
+    world.push_back(chunk1);
 
     int ModelLocation = glGetUniformLocation(
         shaderProgram,
@@ -374,6 +374,16 @@ int main()
         "uProjection"
     );
 
+    for (Chunk& chunk : world)
+    {
+        std::cout
+            << chunk.chunkX << ' '
+            << chunk.chunkY << ' '
+            << chunk.chunkZ << '\n';
+    }
+
+    std::cout << world.size() << '\n';
+
     // FPS setup
 
     double LastFrame = glfwGetTime();
@@ -385,6 +395,10 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        //Resize
+
+        glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
         //camera Movement
 
@@ -398,7 +412,7 @@ int main()
         double currentTime = glfwGetTime();
         double elapsed = currentTime - previousTime;
 
-        if (elapsed >= 1.0)
+        if (elapsed >= 0.25)
         {
             double fps = frameCount / elapsed;
 
@@ -449,46 +463,24 @@ int main()
             glm::value_ptr(projection)
         );
 
-        // Rotation
+        // Rendering
 
-        glBindVertexArray(VAO);
+        for (Chunk& chunk : world) {
+            glm::mat4 model = glm::translate(glm::mat4(1.0f),
+                glm::vec3(chunk.chunkX * ChunkSize,
+                          chunk.chunkY * ChunkSize,
+                          chunk.chunkZ * ChunkSize)
+                        );
 
-        for(int x = 0; x < sizeof(Cubeing) / sizeof(Cubeing[0]); x++){
+            glUniformMatrix4fv(
+                ModelLocation, 
+                1, 
+                GL_FALSE, 
+                glm::value_ptr(model)
+            );
 
-            for(int y = 0; y < sizeof(Cubeing[0][0]) / sizeof(Cubeing[0][0][0]); y++){
-
-                for(int z = 0; z < sizeof(Cubeing[0][0]) / sizeof(Cubeing[0][0][0]); z++){
-
-                    if(Cubeing[x][y][z] == 0){ //cheak for air
-                       continue;
-                    }
-                    
-                    glm::mat4 model = glm::mat4(1.0f);
-
-                    model = glm::translate(
-                        model,
-                        glm::vec3(
-                            (x - ChunkSize / 2.0f) * blockSize,
-                            (y - ChunkSize / 2.0f) * blockSize,
-                            -z * blockSize
-                        )
-                    );
-
-                    model = glm::scale(
-                        model,
-                        glm::vec3(blockSize)
-                    );
-
-                    glUniformMatrix4fv(
-                        ModelLocation,
-                        1,
-                        GL_FALSE,
-                        glm::value_ptr(model)
-                    );
-
-                    glDrawArrays(GL_TRIANGLES, 0, 36);
-                }
-            }
+            glBindVertexArray(chunk.mesh.VAO);
+            glDrawArrays(GL_TRIANGLES, 0, chunk.mesh.vertexCount);
         }
 
         //error stuff
@@ -503,4 +495,108 @@ int main()
 
     glfwTerminate();
     return 0;
+}
+
+//function assignment
+
+void GenerateChunk(Chunk& chunk)
+{
+    for (int x = 0; x < ChunkSize; x++)
+    {
+        for (int y = 0; y < ChunkSize - x; y++)
+        {
+            for (int z = 0; z < ChunkSize - x - y; z++)
+            {
+                chunk.blocks[x][y][z] = 1;
+            }
+        }
+    }
+}
+
+void framebuffer_size_callback(GLFWwindow*, int w, int h){
+    glViewport(0, 0, w, h);
+}
+bool IsBlockSolid(Chunk& chunk, int x, int y, int z){
+    if (x < 0 || x >= ChunkSize ||
+        y < 0 || y >= ChunkSize ||
+        z < 0 || z >= ChunkSize)
+    {
+        return false;
+    }
+
+    return chunk.blocks[x][y][z] != 0;
+}
+
+void AppendFace(std::vector<float>& mesh, int faceStart, int x, int y, int z){
+    for (int i = 0; i < 6; i++){
+        int Base = ( faceStart + i ) * 6;
+
+        mesh.push_back(Vertices[Base + 0] + x);
+        mesh.push_back(Vertices[Base + 1] + y);
+        mesh.push_back(Vertices[Base + 2] + z); 
+
+        mesh.push_back(Vertices[Base + 3]);
+        mesh.push_back(Vertices[Base + 4]);
+        mesh.push_back(Vertices[Base + 5]);
+    }
+}
+
+void ChunkMesher(Chunk& chunk){
+    std::vector<float> mesh;
+
+    for (int x = 0; x < ChunkSize; x++){
+
+        for (int y = 0; y < ChunkSize; y++){
+
+            for (int z = 0; z < ChunkSize; z++){
+
+                if (!IsBlockSolid(chunk, x, y, z)) 
+                {
+                    continue; 
+                }
+
+                if (!IsBlockSolid(chunk, x, y + 1, z)) AppendFace(mesh, TOP_FACE    , x, y, z);
+                if (!IsBlockSolid(chunk, x, y - 1, z)) AppendFace(mesh, BOTTOM_FACE , x, y, z);
+                if (!IsBlockSolid(chunk, x + 1, y, z)) AppendFace(mesh, RIGHT_FACE  , x, y, z);
+                if (!IsBlockSolid(chunk, x - 1, y, z)) AppendFace(mesh, LEFT_FACE   , x, y, z);
+                if (!IsBlockSolid(chunk, x, y, z + 1)) AppendFace(mesh, FRONT_FACE  , x, y, z);
+                if (!IsBlockSolid(chunk, x, y, z - 1)) AppendFace(mesh, BACK_FACE   , x, y, z);
+
+                    
+            }
+        }
+    }
+
+    glGenVertexArrays(1, &chunk.mesh.VAO);
+    glGenBuffers(1, &chunk.mesh.VBO);
+
+    glBindVertexArray(chunk.mesh.VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, chunk.mesh.VBO);
+    glBufferData(GL_ARRAY_BUFFER, mesh.size() * sizeof(float), mesh.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        6 * sizeof(float),
+        (void*)0
+    );
+
+    glVertexAttribPointer(
+        1,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        6 * sizeof(float),
+        (void*)(3 * sizeof(float))
+    );
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    chunk.mesh.vertexCount = mesh.size() / 6;
 }
