@@ -1,0 +1,7 @@
+# Build artifacts
+*.exe
+*.o
+*.obj
+
+# VSCode runner scratch
+tempCodeRunnerFile.cpp

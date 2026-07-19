@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo \"--- where tasks.json files live ---\"; ls -la \"E:/C++ Projects/.vscode/tasks.json\" 2>/dev/null; ls -la \"E:/VoxelEngine/.vscode/\" 2>/dev/null && echo \"\\(VoxelEngine/.vscode exists\\)\" || echo \"\\(no E:/VoxelEngine/.vscode yet\\)\")",
+      "Bash(mkdir -p \"E:/VoxelEngine/.vscode\" \"E:/VoxelEngine/build\" && echo \"created .vscode and build/\")",
+      "Bash(objdump -h build/OpenGL.exe)",
+      "Bash(awk 'NR>4 && $2 ~ /^\\\\./ {printf \" %-10s %8s bytes\\\\n\",$2,$3}')",
+      "Bash(objdump -p build/OpenGL.exe)"
+    ]
+  }
+}

@@ -1,3 +1,11 @@
 {
-    "cmake.sourceDirectory": "E:/C++ Projects/OpenGLStuff/External/glm"
+    "C_Cpp.default.compilerPath": "E:/MinGw/ucrt64/bin/g++.exe",
+    "C_Cpp.default.cStandard": "c17",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.intelliSenseMode": "windows-gcc-x64",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**"
+    ],
+    "code-runner.runInTerminal": true,
+    "code-runner.clearPreviousOutput": true
 }
