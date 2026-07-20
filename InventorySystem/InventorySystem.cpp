@@ -27,6 +27,7 @@ void AddItem(std::string TakenName, int TakenCount, int TakenMaxItems, int Taken
 void RemoveItem(int IDno);
 void PrintInventory();
 void UploadinventoryToDrive();
+void LoadInventoryFromDrive();
 
 int main(){
 
@@ -43,6 +44,7 @@ int main(){
                   << "2. Remove Item"     << '\n'
                   << "3. Print Inventory" << '\n'
                   << "4. Quit"            << '\n'
+                  << "5. Upload to Drive" << '\n'
                   << "Choice : ";
 
         std::cin >> choice;
@@ -71,6 +73,9 @@ int main(){
         }
         else if (choice == 3){
             PrintInventory();
+        }
+        else if (choice == 5){
+            UploadinventoryToDrive();
         }
     }
 
@@ -134,7 +139,13 @@ void PrintInventory(){
 
 void UploadinventoryToDrive()
 {
-    std::ofstream file("InventorySystem/InventoryInformation.txt");
+    std::ofstream file("InventoryInformation.txt");
+
+    // Check once before writing
+    if (!file.is_open()) {
+        std::cout << '\n' << "Failed To Upload" << '\n';
+        return;
+    }
 
     for (int i = 0; i < InventorySize; i++){
         file << Inventory[i].name     << '\n';
@@ -142,5 +153,15 @@ void UploadinventoryToDrive()
         file << Inventory[i].MaxItems << '\n';
         file << Inventory[i].IDno     << '\n';
         file << '\n' << "!#@" << '\n'; // NextLine Identifier
+    }
+
+    std::cout << '\n' << "Uploaded!" << '\n';
+}
+
+void LoadInventoryFromDrive(){
+    std::ifstream file("InventoryInformation.txt");
+
+    for (int i = 0; i < InventorySize; i++){
+        
     }
 }
