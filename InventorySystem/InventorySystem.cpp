@@ -2,6 +2,7 @@
 #include <vector>
 #include <fstream>
 #include <cstdlib>
+#include <optional>
 
 struct item{
 
@@ -19,7 +20,7 @@ struct item{
 
 // Globals
 
-std::vector<item> Inventory;
+std::vector<std::optional<item>> Inventory;
 int InventorySize = 30;
 
 // Function Declations
@@ -108,15 +109,18 @@ void AddItem(std::string TakenName, int TakenCount, int TakenMaxItems, int Taken
         return;
     }
 
+    item NewItem;
+    NewItem.name       = TakenName;
+    NewItem.count      = TakenCount;
+    NewItem.MaxItems   = TakenMaxItems;
+    NewItem.IDno       = TakenIDno;
+    NewItem.ExpiryDate = TakenExpiry;
+
     // Empty slot = space to place the item
 
-    if (Inventory[TakenIDno].IDno == 0) {
+    if (!Inventory[TakenIDno]) {
         std::cout << "Space Available" << '\n';
-        Inventory[TakenIDno].name       = TakenName;
-        Inventory[TakenIDno].count      = TakenCount;
-        Inventory[TakenIDno].MaxItems   = TakenMaxItems;
-        Inventory[TakenIDno].IDno       = TakenIDno;
-        Inventory[TakenIDno].ExpiryDate = TakenExpiry;
+        Inventory[TakenIDno] = NewItem;
         return;
     }
     else{
@@ -128,32 +132,21 @@ void AddItem(std::string TakenName, int TakenCount, int TakenMaxItems, int Taken
         std::cin >> Replace;
 
         if (Replace == 'Y' || Replace == 'y'){
-            Inventory[TakenIDno].name       = TakenName;
-            Inventory[TakenIDno].count      = TakenCount;
-            Inventory[TakenIDno].MaxItems   = TakenMaxItems;
-            Inventory[TakenIDno].IDno       = TakenIDno;
-            Inventory[TakenIDno].ExpiryDate = TakenExpiry;
+            Inventory[TakenIDno] = NewItem;
         }
     }
 }
 
 void RemoveItem(int IDnum){
     for (unsigned int i = 0; i < Inventory.size() ; i++){
-        if (Inventory[i].IDno == IDnum){
+        if (Inventory[i] && Inventory[i]->IDno == IDnum){
             std::cout << '\n'
                       << "The Item being Removed is : " << '\n'
-                      << "Name      :" << Inventory[i].name << '\n'
-                      << "Count     :" << Inventory[i].count << '\n'
-                      << "Max Count :" << Inventory[i].MaxItems << '\n';
+                      << "Name      :" << Inventory[i]->name << '\n'
+                      << "Count     :" << Inventory[i]->count << '\n'
+                      << "Max Count :" << Inventory[i]->MaxItems << '\n';
 
-            if(!Inventory.empty() && i < Inventory.size())
-            {
-                Inventory[i].name = "";
-                Inventory[i].ExpiryDate = "";
-                Inventory[i].count = 0;
-                Inventory[i].MaxItems = 0;
-                Inventory[i].IDno = 0;
-            }
+            Inventory[i] = std::nullopt;
         }
     }
 };
@@ -165,11 +158,11 @@ void PrintInventory(){
     for (int i = 0; i < (int)Inventory.size(); i++){
 
         // Skip empty slots
-        if (Inventory[i].IDno == 0) continue;
+        if (!Inventory[i].has_value()) continue;
 
-        std::cout << Inventory[i].name
-                  << "  (x" << Inventory[i].count << ")"
-                  << "  Expires: " << Inventory[i].ExpiryDate << '\n';
+        std::cout << Inventory[i]->name
+                  << "  (x" << Inventory[i]->count << ")"
+                  << "  Expires: " << Inventory[i]->ExpiryDate << '\n';
     }
 };
 
@@ -186,13 +179,13 @@ void UploadinventoryToDrive()
     for (int i = 1; i < InventorySize; i++){
 
         // Skip empty slots
-        if (Inventory[i].IDno == 0) continue;
+        if (!Inventory[i].has_value()) continue;
 
-        file << Inventory[i].name       << '\n';
-        file << Inventory[i].count      << '\n';
-        file << Inventory[i].MaxItems   << '\n';
-        file << Inventory[i].IDno       << '\n';
-        file << Inventory[i].ExpiryDate << '\n';
+        file << Inventory[i]->name       << '\n';
+        file << Inventory[i]->count      << '\n';
+        file << Inventory[i]->MaxItems   << '\n';
+        file << Inventory[i]->IDno       << '\n';
+        file << Inventory[i]->ExpiryDate << '\n';
     }
 
     std::cout << '\n' << "Uploaded!" << '\n';
@@ -215,11 +208,14 @@ void LoadInventoryFromDrive(){
 
         // Guard: only place if the ID is a valid slot
         if (IDno > 0 && IDno < InventorySize){
-            Inventory[IDno].name       = name;
-            Inventory[IDno].count      = count;
-            Inventory[IDno].MaxItems   = maxItems;
-            Inventory[IDno].IDno       = IDno;
-            Inventory[IDno].ExpiryDate = expiry;
+            item NewItem;
+            NewItem.name       = name;
+            NewItem.count      = count;
+            NewItem.MaxItems   = maxItems;
+            NewItem.IDno       = IDno;
+            NewItem.ExpiryDate = expiry;
+
+            Inventory[IDno] = NewItem;
         }
     }
 
