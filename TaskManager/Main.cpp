@@ -1,8 +1,17 @@
+#include <algorithm>
 #include <iostream>
 #include <optional>
 #include <fstream>
+#include <memory>
 #include <vector>
 #include <string>
+
+//Memory
+struct  Noisy
+{
+    Noisy()  { std::cout << "Born" << '\n'; };
+    ~Noisy() { std::cout << "Died" << '\n'; };
+};
 
 // Enum Classes
 enum class Priority : int {High    , Medium    , Low      };
@@ -30,13 +39,13 @@ struct MultiTaskContainer
 {
     // Important
     int TaskContainerID;
-    std::string Title;
-    std::string Description;
+    std::string Title       = "None";
+    std::string Description = "None";
 
-    std::vector<IndividualTaskProperties> Tasks;
+    std::vector<std::optional<IndividualTaskProperties>> Tasks;
 };
 
-std::vector<MultiTaskContainer> TaskContainers;
+std::vector<std::unique_ptr<MultiTaskContainer>> TaskContainers;
 
 // Function Innitializations
 
@@ -45,27 +54,52 @@ void UploadTasksToDrive();
 void LoadTasksFromDrive();
 
 int AddTask(IndividualTaskProperties* TaskDetailPtr, MultiTaskContainer* Container);
-int RemoveTask(int TaskID);
+int RemoveTask(int TaskID, int ContainerID);
+
+int AddContainer(std::unique_ptr<MultiTaskContainer> c);
 
 // Main
 int main () {
     IndividualTaskProperties Task1;
     Task1.Title = "Complete Add Task";
     Task1.Description = "None";
+    Task1.TaskID = 12;
 
-    MultiTaskContainer Today;
-    Today.Title = "Today";
-    Today.Description = "Hlo";
-    Today.TaskContainerID = 123;
+    {
+        auto Today = std::make_unique<MultiTaskContainer>();
+        Today->Title           = "Today";
+        Today->TaskContainerID = 123;
 
-    AddTask(&Task1, &Today);
+        AddContainer(std::move(Today));
+    }   // Today goes out of scope here -- already moved-from, nothing to clean up
 
-    for (auto& t : Today.Tasks){
-        std::cout << t.Title       << '\n'
-                  << t.Description << '\n'
-                  << t.DeadLine    << '\n';
+    MultiTaskContainer* TodayPtr = TaskContainers.back().get();   // the REAL object, fetched fresh
+
+    AddTask(&Task1, TodayPtr);
+
+    for (auto& c : TaskContainers){
+        std::cout << c->Title << '\n';
     }
-        
+
+    for (auto& t : TodayPtr->Tasks){
+        if (!t) continue;
+        std::cout << t->Title       << '\n'
+                  << t->Description << '\n'
+                  << t->DeadLine    << '\n';
+    }
+
+    RemoveTask(Task1.TaskID, TodayPtr->TaskContainerID);
+
+    for (auto& c : TaskContainers){
+        std::cout << c->Title << '\n';
+    }
+
+    for (auto& t : TodayPtr->Tasks){
+        if (!t) continue;
+        std::cout << t->Title       << '\n'
+                  << t->Description << '\n'
+                  << t->DeadLine    << '\n';
+    }
 
     return 0;
 }
@@ -128,5 +162,25 @@ int AddTask(IndividualTaskProperties* TaskDetailsPtr, MultiTaskContainer* Contai
 
     Container->Tasks.push_back(*TaskDetailsPtr);
 
+    return 0;
+}
+
+int RemoveTask(int TaskID, int ContainerID){
+    for (auto& c : TaskContainers){
+        if (c->TaskContainerID != ContainerID) continue;
+
+        for (auto& t : c->Tasks){
+            if (t->TaskID != TaskID) continue;
+
+            t = std::nullopt;
+        };
+    }
+    return 0;
+}
+
+int AddContainer(std::unique_ptr<MultiTaskContainer> c){
+    if (c == nullptr) return -1;
+
+    TaskContainers.push_back(std::move(c));
     return 0;
 }
