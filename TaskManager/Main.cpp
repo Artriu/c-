@@ -5,6 +5,8 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <cstdlib>
+#include "Menu.h"
 
 //Memory
 struct  Noisy
@@ -57,48 +59,96 @@ int AddTask(IndividualTaskProperties* TaskDetailPtr, MultiTaskContainer* Contain
 int RemoveTask(int TaskID, int ContainerID);
 
 int AddContainer(std::unique_ptr<MultiTaskContainer> c);
+MultiTaskContainer* FindContainer(int ContainerID);
 
 // Main
 int main () {
-    IndividualTaskProperties Task1;
-    Task1.Title = "Complete Add Task";
-    Task1.Description = "None";
-    Task1.TaskID = 12;
+    int choice = 0;
 
-    {
-        auto Today = std::make_unique<MultiTaskContainer>();
-        Today->Title           = "Today";
-        Today->TaskContainerID = 123;
+    while (choice != 5){
 
-        AddContainer(std::move(Today));
-    }   // Today goes out of scope here -- already moved-from, nothing to clean up
+        system("cls");
 
-    MultiTaskContainer* TodayPtr = TaskContainers.back().get();   // the REAL object, fetched fresh
+        std::cout << '\n';
+        PrintPaddedList({"1. Add Container", "2. Add Task", "3. Remove Task", "4. Print Everything", "5. Quit"});
+        std::cout << "Choice : ";
 
-    AddTask(&Task1, TodayPtr);
+        std::cin >> choice;
 
-    for (auto& c : TaskContainers){
-        std::cout << c->Title << '\n';
-    }
+        if (choice == 1){
+            std::string title;
+            int containerID;
 
-    for (auto& t : TodayPtr->Tasks){
-        if (!t) continue;
-        std::cout << t->Title       << '\n'
-                  << t->Description << '\n'
-                  << t->DeadLine    << '\n';
-    }
+            std::cout << "Container Title : ";
+            std::cin  >> title;
+            std::cout << "Container ID    : ";
+            std::cin  >> containerID;
 
-    RemoveTask(Task1.TaskID, TodayPtr->TaskContainerID);
+            auto NewContainer = std::make_unique<MultiTaskContainer>();
+            NewContainer->Title           = title;
+            NewContainer->TaskContainerID = containerID;
 
-    for (auto& c : TaskContainers){
-        std::cout << c->Title << '\n';
-    }
+            AddContainer(std::move(NewContainer));
+        }
+        else if (choice == 2){
+            int containerID;
+            std::cout << "Add task to which Container ID : ";
+            std::cin  >> containerID;
 
-    for (auto& t : TodayPtr->Tasks){
-        if (!t) continue;
-        std::cout << t->Title       << '\n'
-                  << t->Description << '\n'
-                  << t->DeadLine    << '\n';
+            MultiTaskContainer* Container = FindContainer(containerID);
+
+            if (Container == nullptr){
+                std::cout << "No container with that ID." << '\n';
+            }
+            else {
+                IndividualTaskProperties NewTask;
+                int priorityChoice, lengthChoice;
+
+                std::cout << "Task ID       : ";
+                std::cin  >> NewTask.TaskID;
+                std::cout << "Title         : ";
+                std::cin  >> NewTask.Title;
+                std::cout << "Description   : ";
+                std::cin  >> NewTask.Description;
+                std::cout << "Priority (0=High, 1=Medium, 2=Low) : ";
+                std::cin  >> priorityChoice;
+                std::cout << "Length (0=Long, 1=Medium, 2=Small) : ";
+                std::cin  >> lengthChoice;
+                std::cout << "Deadline (e.g. 12/08/2026, no spaces) : ";
+                std::cin  >> NewTask.DeadLine;
+
+                NewTask.Priority = static_cast<Priority>(priorityChoice);
+                NewTask.Length   = static_cast<Length>(lengthChoice);
+
+                AddTask(&NewTask, Container);
+            }
+        }
+        else if (choice == 3){
+            int taskID, containerID;
+            std::cout << "Task ID      : ";
+            std::cin  >> taskID;
+            std::cout << "Container ID : ";
+            std::cin  >> containerID;
+
+            RemoveTask(taskID, containerID);
+        }
+        else if (choice == 4){
+            for (auto& c : TaskContainers){
+                std::cout << "[Container] " << c->Title << " (ID " << c->TaskContainerID << ")\n";
+
+                for (auto& t : c->Tasks){
+                    if (!t) continue;
+                    std::cout << "  - " << t->Title << " | " << t->Description
+                              << " | due " << t->DeadLine << '\n';
+                }
+            }
+        }
+
+        if (choice != 5){
+            std::cout << "\nPress Enter to continue...";
+            std::cin.ignore();
+            std::cin.get();
+        }
     }
 
     return 0;
@@ -183,4 +233,11 @@ int AddContainer(std::unique_ptr<MultiTaskContainer> c){
 
     TaskContainers.push_back(std::move(c));
     return 0;
+}
+
+MultiTaskContainer* FindContainer(int ContainerID){
+    for (auto& c : TaskContainers){
+        if (c->TaskContainerID == ContainerID) return c.get();
+    }
+    return nullptr;
 }
