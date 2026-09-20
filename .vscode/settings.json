@@ -1,12 +1,27 @@
 {
+    // ---- IntelliSense (red squiggles) ----
     "C_Cpp.default.compilerPath": "E:/MinGw/ucrt64/bin/g++.exe",
     "C_Cpp.default.cStandard": "c17",
-    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.cppStandard": "c++20",
     "C_Cpp.default.intelliSenseMode": "windows-gcc-x64",
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/**"
     ],
+
+    // ---- Code Runner: one button = compile + run, input typed in the terminal ----
     "code-runner.runInTerminal": true,
+    "code-runner.preserveFocus": false,
+    "code-runner.saveFileBeforeRun": true,
+    "code-runner.ignoreSelection": true,
     "code-runner.clearPreviousOutput": true,
+    "code-runner.executorMap": {
+        "cpp": "$env:TMPDIR='E:/Temp'; cd \"$dirWithoutTrailingSlash\"; g++ -std=c++20 -Wall -Wextra \"$fileName\" -o \"$fileNameWithoutExt.exe\"; if ($?) { & \"./$fileNameWithoutExt.exe\" }",
+        "c": "$env:TMPDIR='E:/Temp'; cd \"$dirWithoutTrailingSlash\"; gcc -std=c17 -Wall -Wextra \"$fileName\" -o \"$fileNameWithoutExt.exe\"; if ($?) { & \"./$fileNameWithoutExt.exe\" }"
+    },
+
+    // Code Runner sends that command to whichever shell the terminal opens in.
+    // Pinning PowerShell keeps the ';' and 'if ($?)' syntax above valid.
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+
     "chat.disableAIFeatures": true
 }

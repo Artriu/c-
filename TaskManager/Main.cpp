@@ -6,7 +6,6 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
-#include "Menu.h"
 
 //Memory
 struct  Noisy
@@ -54,6 +53,8 @@ std::vector<std::unique_ptr<MultiTaskContainer>> TaskContainers;
 void StringToIntForDate(std::string DDMMYYYY);
 void UploadTasksToDrive();
 void LoadTasksFromDrive();
+void PrintContainers();
+void SeedTestData();
 
 int AddTask(IndividualTaskProperties* TaskDetailPtr, MultiTaskContainer* Container);
 int RemoveTask(int TaskID, int ContainerID);
@@ -63,96 +64,50 @@ MultiTaskContainer* FindContainer(int ContainerID);
 
 // Main
 int main () {
-    int choice = 0;
 
-    while (choice != 5){
+    SeedTestData();   // temporary: gives us something to print. Delete once "Add Container" works.
 
-        system("cls");
+    while (true)
+    {
+        std::cout << "Choose an option with the respective number" << '\n';
+        std::cout << "1. Container List" << '\n';
+        std::cout << "2. Load Data"      << '\n';
+        std::cout << "3. Upload Data"    << '\n';
+        std::cout << "4. Exit"           << '\n';
 
-        std::cout << '\n';
-        PrintPaddedList({"1. Add Container", "2. Add Task", "3. Remove Task", "4. Print Everything", "5. Quit"});
-        std::cout << "Choice : ";
+        int Selection;
 
-        std::cin >> choice;
+        std::cin >> Selection;
 
-        if (choice == 1){
-            std::string title;
-            int containerID;
+        switch (Selection)
+        {
+            case 1:
+                PrintContainers();
+                continue;
 
-            std::cout << "Container Title : ";
-            std::cin  >> title;
-            std::cout << "Container ID    : ";
-            std::cin  >> containerID;
+            case 2:
+                std::cout << "Unavailable" << '\n';
+                continue;
 
-            auto NewContainer = std::make_unique<MultiTaskContainer>();
-            NewContainer->Title           = title;
-            NewContainer->TaskContainerID = containerID;
+            case 3:
+                std::cout << "Unavailable" << '\n';
+                continue;
 
-            AddContainer(std::move(NewContainer));
-        }
-        else if (choice == 2){
-            int containerID;
-            std::cout << "Add task to which Container ID : ";
-            std::cin  >> containerID;
+            case 4:
+                std::cout << "Closing";
+                return 0;
 
-            MultiTaskContainer* Container = FindContainer(containerID);
-
-            if (Container == nullptr){
-                std::cout << "No container with that ID." << '\n';
-            }
-            else {
-                IndividualTaskProperties NewTask;
-                int priorityChoice, lengthChoice;
-
-                std::cout << "Task ID       : ";
-                std::cin  >> NewTask.TaskID;
-                std::cout << "Title         : ";
-                std::cin  >> NewTask.Title;
-                std::cout << "Description   : ";
-                std::cin  >> NewTask.Description;
-                std::cout << "Priority (0=High, 1=Medium, 2=Low) : ";
-                std::cin  >> priorityChoice;
-                std::cout << "Length (0=Long, 1=Medium, 2=Small) : ";
-                std::cin  >> lengthChoice;
-                std::cout << "Deadline (e.g. 12/08/2026, no spaces) : ";
-                std::cin  >> NewTask.DeadLine;
-
-                NewTask.Priority = static_cast<Priority>(priorityChoice);
-                NewTask.Length   = static_cast<Length>(lengthChoice);
-
-                AddTask(&NewTask, Container);
-            }
-        }
-        else if (choice == 3){
-            int taskID, containerID;
-            std::cout << "Task ID      : ";
-            std::cin  >> taskID;
-            std::cout << "Container ID : ";
-            std::cin  >> containerID;
-
-            RemoveTask(taskID, containerID);
-        }
-        else if (choice == 4){
-            for (auto& c : TaskContainers){
-                std::cout << "[Container] " << c->Title << " (ID " << c->TaskContainerID << ")\n";
-
-                for (auto& t : c->Tasks){
-                    if (!t) continue;
-                    std::cout << "  - " << t->Title << " | " << t->Description
-                              << " | due " << t->DeadLine << '\n';
-                }
-            }
-        }
-
-        if (choice != 5){
-            std::cout << "\nPress Enter to continue...";
-            std::cin.ignore();
-            std::cin.get();
+            default:
+                std::cout << "INVALID CHOICE" << '\n';
+                continue;
         }
     }
+    
 
     return 0;
 }
+
+// Function delarations
 
 void StringToIntForDate(std::string DDMMYYYY){
     int PositionInText = 0;
@@ -236,8 +191,43 @@ int AddContainer(std::unique_ptr<MultiTaskContainer> c){
 }
 
 MultiTaskContainer* FindContainer(int ContainerID){
+
     for (auto& c : TaskContainers){
         if (c->TaskContainerID == ContainerID) return c.get();
     }
     return nullptr;
+}
+
+void PrintContainers(){
+    for (const auto& c : TaskContainers){
+        if (c != nullptr) {
+            std::cout << c->Title << '\n';
+        }
+    }
+}
+
+void SeedTestData(){
+
+    // 1. Build the container on the heap. Work owns it right now.
+    auto Work = std::make_unique<MultiTaskContainer>();
+
+    // 2. Fill it in. Arrow, because Work is a pointer to the container.
+    Work->TaskContainerID = 1;
+    Work->Title           = "Work";
+    Work->Description     = "Things for the job";
+
+    // 3. Hand ownership to the vector. After this line Work is empty - do not use it again.
+    AddContainer(std::move(Work));
+
+    auto School = std::make_unique<MultiTaskContainer>();
+    School->TaskContainerID = 2;
+    School->Title           = "School";
+    School->Description     = "Assignments and revision";
+    AddContainer(std::move(School));
+
+    auto Home = std::make_unique<MultiTaskContainer>();
+    Home->TaskContainerID = 3;
+    Home->Title           = "Home";
+    Home->Description     = "Chores and errands";
+    AddContainer(std::move(Home));
 }
