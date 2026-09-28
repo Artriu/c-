@@ -15,8 +15,8 @@
     "code-runner.ignoreSelection": true,
     "code-runner.clearPreviousOutput": true,
     "code-runner.executorMap": {
-        "cpp": "$env:TMPDIR='E:/Temp'; cd \"$dirWithoutTrailingSlash\"; g++ -std=c++20 -Wall -Wextra \"$fileName\" -o \"$fileNameWithoutExt.exe\"; if ($?) { & \"./$fileNameWithoutExt.exe\" }",
-        "c": "$env:TMPDIR='E:/Temp'; cd \"$dirWithoutTrailingSlash\"; gcc -std=c17 -Wall -Wextra \"$fileName\" -o \"$fileNameWithoutExt.exe\"; if ($?) { & \"./$fileNameWithoutExt.exe\" }"
+        "cpp": "$env:TMPDIR='E:/Temp'; $env:PATH='E:/MinGw/ucrt64/bin;'+$env:PATH; cd \"$dirWithoutTrailingSlash\"; g++ -std=c++20 -Wall -Wextra \"$fileName\" -o \"$fileNameWithoutExt.exe\"; if ($?) { & \"./$fileNameWithoutExt.exe\" }",
+        "c": "$env:TMPDIR='E:/Temp'; $env:PATH='E:/MinGw/ucrt64/bin;'+$env:PATH; cd \"$dirWithoutTrailingSlash\"; gcc -std=c17 -Wall -Wextra \"$fileName\" -o \"$fileNameWithoutExt.exe\"; if ($?) { & \"./$fileNameWithoutExt.exe\" }"
     },
 
     // Code Runner sends that command to whichever shell the terminal opens in.

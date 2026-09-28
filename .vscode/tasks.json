@@ -18,7 +18,9 @@
             "options": {
                 "cwd": "${fileDirname}",
                 "env": {
-                    "TMPDIR": "E:/Temp"
+                    "TMPDIR": "E:/Temp",
+                    // g++ needs the DLLs in its own folder; without this it dies silently
+                    "PATH": "E:/MinGw/ucrt64/bin;${env:PATH}"
                 }
             },
             "problemMatcher": [
@@ -36,6 +38,12 @@
             "command": "${fileDirname}/${fileBasenameNoExtension}.exe",
             "dependsOn": "C/C++: g++.exe build active file",
             "dependsOrder": "sequence",
+            "options": {
+                "env": {
+                    // the built .exe needs libstdc++ from here too
+                    "PATH": "E:/MinGw/ucrt64/bin;${env:PATH}"
+                }
+            },
             "presentation": {
                 "reveal": "always",
                 "panel": "dedicated",
@@ -50,7 +58,10 @@
             "type": "shell",
             "command": "$env:TMPDIR='E:/Temp'; g++ -std=c++20 -Wall -Wextra -g *.cpp -o Program.exe; if ($?) { & './Program.exe' }",
             "options": {
-                "cwd": "${fileDirname}"
+                "cwd": "${fileDirname}",
+                "env": {
+                    "PATH": "E:/MinGw/ucrt64/bin;${env:PATH}"
+                }
             },
             "presentation": {
                 "reveal": "always",

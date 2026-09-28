@@ -9,7 +9,9 @@
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
-            "environment": [],
+            "environment": [
+                { "name": "PATH", "value": "E:/MinGw/ucrt64/bin;${env:PATH}" }
+            ],
             "externalConsole": true,
             "MIMode": "gdb",
             "miDebuggerPath": "E:\\MinGw\\ucrt64\\bin\\gdb.exe",
