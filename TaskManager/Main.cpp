@@ -68,6 +68,9 @@ int RemoveTask(int TaskID, int ContainerID);
 int AddContainer(MultiTaskContainer c);
 int RemoveContainer(int ContainerID);
 
+void UploadToDisk();
+void LoadFromDisk();
+
 MultiTaskContainer* FindContainer(int ContainerID);
 
 // Input

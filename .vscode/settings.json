@@ -15,7 +15,8 @@
     "code-runner.ignoreSelection": true,
     "code-runner.clearPreviousOutput": true,
     "code-runner.executorMap": {
-        "cpp": "$env:TMPDIR='E:/Temp'; $env:PATH='E:/MinGw/ucrt64/bin;'+$env:PATH; cd \"$dirWithoutTrailingSlash\"; g++ -std=c++20 -Wall -Wextra \"$fileName\" -o \"$fileNameWithoutExt.exe\"; if ($?) { & \"./$fileNameWithoutExt.exe\" }",
+        // Inside TaskManager1.0: build the whole project (all .cpp, Headers/, SQLite). Anywhere else: just this one file.
+        "cpp": "$env:TMPDIR='E:/Temp'; $env:PATH='E:/MinGw/ucrt64/bin;'+$env:PATH; if (\"$dirWithoutTrailingSlash\" -like '*TaskManager1.0*') { cd \"$workspaceRoot/TaskManager1.0\"; $Files = (Get-ChildItem -Recurse -Filter *.cpp).FullName; g++ -std=c++20 -Wall -Wextra -g -IHeaders $Files -o TaskManager.exe -lsqlite3; if ($?) { & './TaskManager.exe' } } else { cd \"$dirWithoutTrailingSlash\"; g++ -std=c++20 -Wall -Wextra \"$fileName\" -o \"$fileNameWithoutExt.exe\"; if ($?) { & \"./$fileNameWithoutExt.exe\" } }",
         "c": "$env:TMPDIR='E:/Temp'; $env:PATH='E:/MinGw/ucrt64/bin;'+$env:PATH; cd \"$dirWithoutTrailingSlash\"; gcc -std=c17 -Wall -Wextra \"$fileName\" -o \"$fileNameWithoutExt.exe\"; if ($?) { & \"./$fileNameWithoutExt.exe\" }"
     },
 

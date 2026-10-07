@@ -73,6 +73,28 @@
                 "$gcc"
             ],
             "detail": "Compiles EVERY .cpp next to the active file into Program.exe, then runs it. Use this one for TaskManager."
+        },
+        {
+            "label": "Build & Run TaskManager1.0",
+            "type": "shell",
+            // Every .cpp in the project (subfolders too), headers from Headers/, SQLite linked at the end
+            "command": "$env:TMPDIR='E:/Temp'; $Files = (Get-ChildItem -Recurse -Filter *.cpp).FullName; g++ -std=c++20 -Wall -Wextra -g -IHeaders $Files -o TaskManager.exe -lsqlite3; if ($?) { & './TaskManager.exe' }",
+            "options": {
+                "cwd": "${workspaceFolder}/TaskManager1.0",
+                "env": {
+                    "PATH": "E:/MinGw/ucrt64/bin;${env:PATH}"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": true,
+                "clear": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Builds all of TaskManager1.0 (any folder, any .cpp) with Headers/ and SQLite, then runs it. Works from whatever file is open."
         }
     ]
 }

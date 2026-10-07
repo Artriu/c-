@@ -1,0 +1,18 @@
+ServerSide!!!
+
+Recieves JSON packets from the client side 
+
+takes the USERID value from the packets
+
+use it to find the user from the SQlite file, i dont want a big ahh text file and this will be probably much better
+
+(
+    this is the design of the SQ lite file
+
+    a bunch of objects with their parents id, not structured but can be structured, it will be loaded on the ram when the user is doing his stuff and unloaded when he is finished
+    basically it
+)
+
+take the structured data and check the packet for any request like the data, moving something etc, here the server has authority so lets say internet goes out and you move a task, that task will stay as it is
+
+also this is very inspired from trello as you can see
