@@ -12,7 +12,7 @@ void AddContainer(Container ContainerInformation);
 void RemoveContainer(std::string ContainerID);
 
 void AddDivision(Division DivisionInformation);
-void RemoveDivision(std::string DivisionID);
+void RemoveDivision(std::string DivisionID, std::string ParentID);
 
 void AddUser(User UserInfo);
 void RemoveUser(std::string UserID, std::string UserPassword);

@@ -1,8 +1,12 @@
 //Headers
 
 #include <DataStructure.hpp>
-#include <search.hpp>
+#include <Search.hpp>
 #include <AddAndRemove.hpp>
+
+//Test Users
+
+#include <TestData.hpp>
 
 //Includes
 
@@ -12,15 +16,25 @@
 #include <sqlite3.h>
 
 int main(){
+    std::cout << "--- File Start ---" << '\n';
     //Sample User
 
-    User Guest1;
-    Guest1.UserName = "Guest1";
-    Guest1.UserID = "ABCD1234";
-    Guest1.UserPassword = "BobTheCat";
-    Guest1.UserEmail = "xyz123@gmail.com";
+    MakeDummyUsers(5);
+    MakeTrickyUsers();
 
     //stuff
 
-    AddUser(Guest1);
+    std::cout << "Deleting User 4" << '\n';
+
+    RemoveUser(AllUsers[4].UserID, AllUsers[4].UserPassword);
+
+    std::cout << "Remaining Users email" << '\n';
+
+    for (auto c : AllUsers)
+    {
+        std::cout << c.UserEmail << '\n';
+    }
+    std::cout << "--- File End ---";
+
+    return 0;
 };

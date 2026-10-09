@@ -1,6 +1,6 @@
 #pragma once
 
-#include <iostream>
+#include <string>
 #include <vector>
 
 struct Task
@@ -13,8 +13,8 @@ struct Task
     std::string ParentID;
 
     //ExtraINFO will be unused for a lot of time
-    int CreationData;
-    int DeadLine;
+    int CreationData = 0;
+    int DeadLine     = 0;
 
     //Miscellaneous
     std::string Description;
@@ -28,7 +28,10 @@ struct Container
     std::string Name;
     std::string ContainerID;
 
-    std::vector<Task> ContainerVector;
+    //storage
+    std::string ParentID;
+
+    std::vector<Task> TaskVector;
 
     //Miscellaneous
     std::string Description;
@@ -39,9 +42,12 @@ struct Division
 {
     //Important
     std::string Name;
-    std::string ContainerID;
+    std::string DivisionID;
 
-    std::vector<Container> DivisionVector;
+    //storage
+    std::string ParentID;
+
+    std::vector<Container> ContainerVector;
 };
 
 struct User
@@ -53,11 +59,10 @@ struct User
     std::string UserPassword;
     std::string UserEmail;
 
-    std::vector<Division> UserVector;
+    std::vector<Division> DivisionVector;
 };
 
-// DoD design for Users
+// BigVector
 
-std::vector<std::string> UserIDs;        // |                                                                                                 |
-std::vector<std::string> UserEmails;     // | The stuff should be aligned, The email & password at position 12 should belong to the same user |
-std::vector<std::string> UserPasswords;  // |                                                                                                 |
+inline std::vector<User> OnlineUsers;
+inline std::vector<User> AllUsers;
