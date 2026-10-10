@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 struct Task
 {
     //Important
@@ -61,6 +63,13 @@ struct User
 
     std::vector<Division> DivisionVector;
 };
+
+// Defining for JSON
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Task,      Name, TaskID, ParentID, CreationData, DeadLine, Description)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Container, Name, ContainerID, ParentID, TaskVector, Description)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Division,  Name, DivisionID, ParentID, ContainerVector)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(User,      UserName, UserID, UserPassword, UserEmail, DivisionVector)
 
 // BigVector
 
