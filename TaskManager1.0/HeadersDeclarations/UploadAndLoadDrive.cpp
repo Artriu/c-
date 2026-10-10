@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <filesystem>
 
 #include <nlohmann/json.hpp>
 
@@ -38,10 +39,10 @@ int GetSector(std::string UserID)
     return -1;
 }
 
-int loadSector (int Sector, std::string UserID, std::string UserPassword) 
-{
+std::string SectorPath(int Sector){
 
     // Getting the file name
+
     std::string SectorString = std::to_string(Sector);
 
     int size = SectorString.size();
@@ -61,8 +62,15 @@ int loadSector (int Sector, std::string UserID, std::string UserPassword)
     }
 
     std::string CompleteStringAddress = "Sectors/Sector" + SectorString + ".json";
+    return CompleteStringAddress;
+}
+
+int loadSector (int Sector, std::string UserID, std::string UserPassword) 
+{
 
     // Loading to online
+
+    std::string CompleteStringAddress = SectorPath(Sector);
 
     std::ifstream File(CompleteStringAddress);
 
@@ -87,4 +95,77 @@ int loadSector (int Sector, std::string UserID, std::string UserPassword)
 
     catch (const std::exception &c) {}
     return -4;
+}
+
+bool saveSector(int Sector, std::string UserID){
+
+    // Find the user in RAM
+
+    User* Me = FindUser(UserID);
+
+    if ( Me == nullptr ) {
+        std::cout << "User not online, nothing to save" << '\n';
+        return false;
+    }
+
+    // Make sure the Sectors folder exists
+
+    std::string CompleteStringAddress = SectorPath(Sector);
+
+    std::filesystem::create_directories("Sectors");
+
+    // Read the sector fresh from disk, so other users in it keep their latest data
+    // (no file yet = empty list)
+
+    json WholeSector = json::array();
+
+    std::ifstream File(CompleteStringAddress);
+
+    if ( File ) {
+        try {
+            WholeSector = json::parse(File);
+        }
+        catch (const std::exception &c) {
+            std::cout << "Sector file is broken, not saving over it" << '\n';
+            return false;
+        }
+    }
+
+    File.close();
+
+    // Swap in this user (or add them if they're not in the file yet)
+
+    bool Found = false;
+
+    for ( auto& UserJSON : WholeSector )
+    {
+        if ( UserJSON["UserID"] == UserID )
+        {
+            UserJSON = *Me;
+            Found = true;
+            break;
+        }
+    }
+
+    if ( !Found ) {
+        WholeSector.push_back(*Me);
+    }
+
+    // Write to a .tmp file first, then swap it in
+    // (if the program dies mid-write, the real file is still the old good one)
+
+    std::string TempAddress = CompleteStringAddress + ".tmp";
+
+    std::ofstream Out(TempAddress);
+    Out << WholeSector.dump(2);
+    Out.close();
+
+    if ( !Out ) {
+        std::cout << "Could not write the sector" << '\n';
+        return false;
+    }
+
+    std::filesystem::rename(TempAddress, CompleteStringAddress);
+
+    return true;
 }

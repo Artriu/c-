@@ -11,5 +11,9 @@
 // Defining
 
 int GetSector(std::string UserID);
-int loadSector(int Sector, std::string UserID, std::string UserPassword);
-bool saveSector(int Sector);
+int loadSector (int Sector, std::string UserID, std::string UserPassword);
+bool saveSector(int Sector, std::string UserID);
+
+// Helper
+
+std::string SectorPath(int Sector);
