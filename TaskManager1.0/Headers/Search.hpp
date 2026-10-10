@@ -5,8 +5,6 @@
 
 #include <DataStructure.hpp>
 
-bool FindUserAndLoadToOnline (std::string UserID, std::string UserPassword);
-
 // Return the real object, or nullptr if not found
 User*      FindUser      ( const std::string& UserID );
 Division*  FindDivision  ( User& Owner,         const std::string& DivisionID  );
